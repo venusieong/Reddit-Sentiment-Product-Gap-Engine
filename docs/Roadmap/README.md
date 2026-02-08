@@ -62,40 +62,40 @@ Defining the scope ensures you build a Minimum Viable Product (MVP) that works, 
 ### Phase 1: Local Ingestion & Staging (Bronze-Zero)
 Goal: Establish a reliable "Source of Truth" for raw data.
 
-[ ] Infrastructure: Dockerize Apache Airflow and PostgreSQL.
-[ ] API Ingestion: Develop Python scripts using PRAW to fetch Reddit submissions.
-[ ] Data Persistence: Design a PostgreSQL schema with JSONB support for raw payloads.
-[ ] Orchestration: Build an Airflow DAG to automate hourly ingestion and handle API rate limits.
+##### [ ] Infrastructure: Dockerize Apache Airflow and PostgreSQL.
+##### [ ] API Ingestion: Develop Python scripts using PRAW to fetch Reddit submissions.
+##### [ ] Data Persistence: Design a PostgreSQL schema with JSONB support for raw payloads.
+##### [ ] Orchestration: Build an Airflow DAG to automate hourly ingestion and handle API rate limits.
 
 ### Phase 2: Cloud Migration (Bronze)
 Goal: Scale storage to the AWS Data Lake.
 
-#### [ ] AWS Setup: Configure S3 buckets (Bronze, Silver, Gold) and IAM security policies.
-#### [ ] Incremental Loading: Implement a "Watermark" strategy to only move new records from Postgres to S3.
-#### [ ] File Format Optimization: Convert raw data to Parquet during the S3 upload for cost-efficient storage.
+##### [ ] AWS Setup: Configure S3 buckets (Bronze, Silver, Gold) and IAM security policies.
+##### [ ] Incremental Loading: Implement a "Watermark" strategy to only move new records from Postgres to S3.
+##### [ ] File Format Optimization: Convert raw data to Parquet during the S3 upload for cost-efficient storage.
 
 ### Phase 3: AI Intelligence & Transformation (Silver)
 Goal: Convert noise into structured product insights.
 
-#### [ ] Glue ETL: Develop PySpark jobs to clean text (stripping URLs/bots/HTML noise).
-#### [ ] NLP Enrichment: Integrate AWS Comprehend for:
+##### [ ] Glue ETL: Develop PySpark jobs to clean text (stripping URLs/bots/HTML noise).
+##### [ ] NLP Enrichment: Integrate AWS Comprehend for:
 * Sentiment Analysis (Positive/Negative/Neutral).
 * Key Phrase Extraction (Discovering the "Product Gaps").
-#### [ ] Schema Evolution: Store enriched data in the S3 Silver layer.
+##### [ ] Schema Evolution: Store enriched data in the S3 Silver layer.
 
 ### Phase 4: Data Warehousing (Gold)
 Goal: High-performance analytical serving.
 
-[ ] Redshift Setup: Deploy Amazon Redshift (Serverless).
-[ ] Data Loading: Implement COPY commands to move Silver data into analytical tables.
-[ ] Modeling: Create SQL views to aggregate metrics like "Sentiment Volatility" and "Competitor Share of Voice."
+##### [ ] Redshift Setup: Deploy Amazon Redshift (Serverless).
+##### [ ] Data Loading: Implement COPY commands to move Silver data into analytical tables.
+##### [ ] Modeling: Create SQL views to aggregate metrics like "Sentiment Volatility" and "Competitor Share of Voice."
 
 ### Phase 5: Visualization & Delivery
 Goal: Empower decision-makers with a "Gap Dashboard."
 
-[ ] BI Integration: Connect Amazon QuickSight to Redshift.
-[ ] Insights: Build a "Market Opportunity Heatmap" based on negative key phrases.
-[ ] Documentation: Finalize the Technical Design Doc and project post-mortem.
+##### [ ] BI Integration: Connect Amazon QuickSight to Redshift.
+##### [ ] Insights: Build a "Market Opportunity Heatmap" based on negative key phrases.
+##### [ ] Documentation: Finalize the Technical Design Doc and project post-mortem.
 -------------------------------------------------------------------------------------
 
 ### Risks & Mitigation
