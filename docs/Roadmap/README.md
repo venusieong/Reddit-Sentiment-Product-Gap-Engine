@@ -70,18 +70,18 @@ Goal: Establish a reliable "Source of Truth" for raw data.
 ### Phase 2: Cloud Migration (Bronze)
 Goal: Scale storage to the AWS Data Lake.
 
-[ ] AWS Setup: Configure S3 buckets (Bronze, Silver, Gold) and IAM security policies.
-[ ] Incremental Loading: Implement a "Watermark" strategy to only move new records from Postgres to S3.
-[ ] File Format Optimization: Convert raw data to Parquet during the S3 upload for cost-efficient storage.
+#### [ ] AWS Setup: Configure S3 buckets (Bronze, Silver, Gold) and IAM security policies.
+#### [ ] Incremental Loading: Implement a "Watermark" strategy to only move new records from Postgres to S3.
+#### [ ] File Format Optimization: Convert raw data to Parquet during the S3 upload for cost-efficient storage.
 
 ### Phase 3: AI Intelligence & Transformation (Silver)
 Goal: Convert noise into structured product insights.
 
-[ ] Glue ETL: Develop PySpark jobs to clean text (stripping URLs/bots/HTML noise).
-[ ] NLP Enrichment: Integrate AWS Comprehend for:
-    - Sentiment Analysis (Positive/Negative/Neutral).
-    - Key Phrase Extraction (Discovering the "Product Gaps").
-[ ] Schema Evolution: Store enriched data in the S3 Silver layer.
+#### [ ] Glue ETL: Develop PySpark jobs to clean text (stripping URLs/bots/HTML noise).
+#### [ ] NLP Enrichment: Integrate AWS Comprehend for:
+* Sentiment Analysis (Positive/Negative/Neutral).
+* Key Phrase Extraction (Discovering the "Product Gaps").
+#### [ ] Schema Evolution: Store enriched data in the S3 Silver layer.
 
 ### Phase 4: Data Warehousing (Gold)
 Goal: High-performance analytical serving.
