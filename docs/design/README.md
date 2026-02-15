@@ -20,38 +20,39 @@ Technology Stack
 ### Data Lifecycle Deep Dive 
 
 A. Generation (Source System)
-Source: Reddit API via PRAW.
-Characteristics: High-velocity, semi-structured (JSON), and outside of direct engineering control.
-Constraint Handling: The pipeline must adhere to Reddit's Rate Limiting (typically 60-100 requests per minute). The logic implements "Exponential Backoff" to retry requests if throttled.
+- Source: Reddit API via PRAW.
+- Characteristics: High-velocity, semi-structured (JSON), and outside of direct engineering control.
+- Constraint Handling: The pipeline must adhere to Reddit's Rate Limiting (typically 60-100 requests per minute). 
+- The logic implements "Exponential Backoff" to retry requests if throttled.
 
 B. Ingestion Strategy (Bronze-Zero Staging)
-This stage focuses on moving data from the API into our "Bronze-Zero" (Postgres) layer safely.
-Pattern: Incremental Batch Ingestion.
-The High Watermark Strategy: To avoid redundant processing and cost, we use a Watermark column (created_utc).
-Logic: Each run, Airflow queries the maximum created_utc from the Postgres staging table. The next API call specifically requests only posts with a timestamp greater than this value.
-Storage: Data is stored in a JSONB column in PostgreSQL to ensure no data is lost if the Reddit API schema changes ("Schema-on-Read").
+- This stage focuses on moving data from the API into our "Bronze-Zero" (Postgres) layer safely.
+- Pattern: Incremental Batch Ingestion.
+- The High Watermark Strategy: To avoid redundant processing and cost, we use a Watermark column (created_utc).
+- Logic: Each run, Airflow queries the maximum created_utc from the Postgres staging table. The next API call specifically requests only posts with a timestamp greater than this value.
+- Storage: Data is stored in a JSONB column in PostgreSQL to ensure no data is lost if the Reddit API schema changes ("Schema-on-Read").
 
 C. Transformation (Medallion Flow)
-Data is refined as it moves through the S3 buckets.
-Bronze (Raw): 1:1 copy of the Postgres data, stored as Parquet for cost-effective S3 storage.
-Silver (Enriched): * Text Cleaning: Removal of URLs, bot signatures, and special characters.
-NLP Call: Sentiment and Entity data from AWS Comprehend are appended as new columns.
-Deduplication: Using post_id to ensure absolute uniqueness before moving to Gold.
-Gold (Aggregated): Data is grouped by Brand and Day to create high-speed analytical tables (e.g., daily_sentiment_summary).
+- Data is refined as it moves through the S3 buckets.
+- Bronze (Raw): 1:1 copy of the Postgres data, stored as Parquet for cost-effective S3 storage.
+- Silver (Enriched): * Text Cleaning: Removal of URLs, bot signatures, and special characters.
+- NLP Call: Sentiment and Entity data from AWS Comprehend are appended as new columns.
+- Deduplication: Using post_id to ensure absolute uniqueness before moving to Gold.
+- Gold (Aggregated): Data is grouped by Brand and Day to create high-speed analytical tables (e.g., daily_sentiment_summary).
 
 D. Serving (Warehouse & BI)
-Pattern: ELT (Extract, Load, Transform).
-Loading: The S3 Gold layer is loaded into Amazon Redshift Serverless using the COPY command, which is optimized for high-volume S3 transfers.
-Data Access: End-users interact with the data via Amazon QuickSight, which queries Redshift directly for near-instant visualization.
+- Pattern: ELT (Extract, Load, Transform).
+- Loading: The S3 Gold layer is loaded into Amazon Redshift Serverless using the COPY command, which is optimized for high-volume S3 transfers.
+- Data Access: End-users interact with the data via Amazon QuickSight, which queries Redshift directly for near-instant visualization.
 
 **Security**: All API credentials and AWS keys are managed via Environment Variables or AWS Secrets Manager, never hardcoded.
 **Observability**: Airflow provides a "Retry" logic (3 attempts per task). If the final attempt fails, an alert is sent via the logging system.
 
 ### Primary Source API
-Provider: Reddit Inc.
-Interface: Reddit OAuth2 API
-Base URL: https://oauth.reddit.com
-Access Method: Python Reddit API Wrapper (PRAW)
+**Provider**: Reddit Inc.
+**Interface**: Reddit OAuth2 API
+**Base URL**: https://oauth.reddit.com
+**Access Method**: Python Reddit API Wrapper (PRAW)
 
 ### Tables from API
 - Link:	The original post in a subreddit (contains the title and main text).
@@ -59,10 +60,10 @@ Access Method: Python Reddit API Wrapper (PRAW)
 - Subreddit: Metadata about the community (subscriber count, rules).
 
 ### Schema & Table Definitions
-A. Operational Tables (PostgreSQL Staging)
+**A.** Operational Tables (PostgreSQL Staging)
 These tables live in your local PostgreSQL instance and control the logic of the engine.
 
-Table: pipeline_config
+- Table: pipeline_config
 Defines which brands and competitors are currently being monitored.
 | Column | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -73,7 +74,7 @@ Defines which brands and competitors are currently being monitored.
 | is_active | BOOLEAN | DEFAULT TRUE | Toggle for the Airflow controller. |
 | updated_at | TIMESTAMP | DEFAULT NOW() | Tracks when the competitor set was last changed. |
 
-Table: ingestion_watermarks
+- Table: ingestion_watermarks
 Tracks the last post processed for each brand to ensure incremental loading.
 | Column | Data Type | Description |
 | :--- | :--- | :--- |
@@ -82,8 +83,8 @@ Tracks the last post processed for each brand to ensure incremental loading.
 | last_fullname | VARCHAR(25) | The name (fullname) of the newest post ingested. |
 
 
-B. Data Tables (Bronze-Zero / Staging)
-These tables store the raw fields extracted directly from the Reddit API objects.Table: raw_reddit_data
+**B.** Data Tables (Bronze-Zero / Staging)
+- These tables store the raw fields extracted directly from the Reddit API objects.Table: raw_reddit_data
 | Column | Reddit API Field | Data Type | Rationale |
 | :--- | :--- | :--- | :--- |
 | fullname | name | VARCHAR(25) | PK: Unique identifier (e.g., t3_15bfi0). |
@@ -96,8 +97,8 @@ These tables store the raw fields extracted directly from the Reddit API objects
 | subreddit | subreddit | VARCHAR(50) | Source community for audience context. |
 | raw_payload | - | JSONB | Immutable Truth: Full API response for future-proofing. |
 
-C. Enriched Tables (Silver / AWS Data Lake)
-Stored in S3 as Parquet, processed via AWS Glue + Comprehend.
+**C.** Enriched Tables (Silver / AWS Data Lake)
+- Stored in S3 as Parquet, processed via AWS Glue + Comprehend.
 | Column | Data Type | Transformation Logic |
 | :--- | :--- | :--- |
 | cleaned_text | TEXT | Regex: HTML decoding (e.g., &amp; $\rightarrow$ &) and URL removal. |
@@ -106,9 +107,8 @@ Stored in S3 as Parquet, processed via AWS Glue + Comprehend.
 | gap_entities | ARRAY(TEXT) | AWS Comprehend: Nouns identifying product features (e.g., "battery"). |
 | config_version | INT | FK: Links the record to the pipeline_config active at time of ingestion. |
 
-D. Analytical Tables (Gold / Redshift)
-Structured for the Market Radar Dashboard.
-Table: fact_product_gaps
+**D.** Analytical Tables (Gold / Redshift)
+- Table: fact_product_gaps
 | Column | Description |
 | :--- | :--- |
 | brand_key | Normalized name of the brand (Target or Competitor). |
